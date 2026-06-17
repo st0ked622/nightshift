@@ -5,11 +5,16 @@ colors and re-corrects images and video so photos still look right.
 
 ## Install (unpacked)
 
-1. Unzip the folder if needed.
-2. Open `chrome://extensions` in Chrome.
-3. Turn on **Developer mode** (top-right).
-4. Click **Load unpacked** and select this `nightshift` folder.
-5. Pin the moon icon from the puzzle-piece menu for quick access.
+1. Download the latest `nightshift-v*.zip` from the
+   [**Releases**](https://github.com/st0ked622/nightshift/releases/latest) page.
+2. Unzip it.
+3. Open `chrome://extensions` in Chrome.
+4. Turn on **Developer mode** (top-right).
+5. Click **Load unpacked** and select the unzipped `nightshift` folder.
+6. Pin the moon icon from the puzzle-piece menu for quick access.
+
+> No download needed if you cloned the repo — just point **Load unpacked** at
+> the repo folder.
 
 ## Use
 
