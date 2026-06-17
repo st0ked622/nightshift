@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NightShift</title>
+  <style>
+    :root {
+      --bg: #0e1016;
+      --surface: #171a23;
+      --surface-2: #1d212c;
+      --border: #272c39;
+      --text: #e8eaf2;
+      --muted: #888fa6;
+      --accent: #9aa6ff;
+      --accent-dim: #4a4f78;
+      --track: #2a2f3d;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 296px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap { padding: 18px 18px 16px; }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin-bottom: 18px;
+    }
+
+    .moon {
+      width: 30px;
+      height: 30px;
+      flex: none;
+    }
+
+    .titles { line-height: 1.1; }
+
+    .eyebrow {
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 14px;
+    }
+
+    .row + .row { border-top: 1px solid var(--border); }
+
+    .row.muted { opacity: 0.45; pointer-events: none; }
+
+    .label { line-height: 1.25; min-width: 0; }
+    .label .name { font-size: 13.5px; font-weight: 500; }
+    .label .sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 168px;
+    }
+
+    /* Switch */
+    .switch {
+      flex: none;
+      width: 42px;
+      height: 24px;
+      border-radius: 24px;
+      background: var(--track);
+      border: none;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.18s ease;
+      padding: 0;
+    }
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #c9cdda;
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+    .switch[aria-checked="true"] { background: var(--accent); }
+    .switch[aria-checked="true"]::after { transform: translateX(18px); background: #0e1016; }
+    .switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Slider */
+    .slider-block { padding: 14px 14px 16px; }
+    .slider-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 11px;
+    }
+    .slider-head .name { font-size: 13.5px; font-weight: 500; }
+    .slider-head .val { font-size: 12px; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 4px;
+      background: var(--track);
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 3px solid var(--surface);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    input[type="range"]:disabled { opacity: 0.4; }
+
+    .note {
+      margin-top: 13px;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <svg class="moon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="16" cy="16" r="15" fill="#1d212c" stroke="#272c39"/>
+        <path d="M20.5 22.5A9 9 0 0 1 14 7.2a9 9 0 1 0 9.8 14.1 9.05 9.05 0 0 1-3.3 1.2Z" fill="#9aa6ff"/>
+      </svg>
+      <div class="titles">
+        <div class="eyebrow">Dark mode</div>
+        <h1>NightShift</h1>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="row">
+        <div class="label">
+          <div class="name">Dark mode</div>
+          <div class="sub">Apply to every site</div>
+        </div>
+        <button id="masterSwitch" class="switch" role="switch" aria-checked="false" aria-label="Toggle dark mode for all sites"></button>
+      </div>
+
+      <div class="row" id="siteRow">
+        <div class="label">
+          <div class="name">This site</div>
+          <div class="sub" id="siteHost">—</div>
+        </div>
+        <button id="siteSwitch" class="switch" role="switch" aria-checked="false" aria-label="Toggle dark mode on this site"></button>
+      </div>
+
+      <div class="slider-block" id="sliderBlock">
+        <div class="slider-head">
+          <span class="name">Brightness</span>
+          <span class="val" id="intensityVal">100%</span>
+        </div>
+        <input type="range" id="intensity" min="60" max="140" step="5" value="100" />
+      </div>
+    </div>
+
+    <div class="note" id="note"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
