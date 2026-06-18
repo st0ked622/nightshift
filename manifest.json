@@ -3,6 +3,7 @@
   "name": "NightShift — Dark Mode for Any Site",
   "version": "1.0.0",
   "description": "Turn any website dark. Per-site control and adjustable brightness, applied instantly to keep pages easy on the eyes.",
+  "homepage_url": "https://github.com/st0ked622/nightshift",
   "permissions": ["storage", "tabs", "scripting"],
   "host_permissions": ["<all_urls>"],
   "action": {
