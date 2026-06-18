@@ -5,7 +5,8 @@ colors and re-corrects images and video so photos still look right.
 
 ## Install (unpacked)
 
-1. Download the latest `nightshift-v*.zip` from the
+1. Download [**`nightshift-v1.1.0.zip`**](https://github.com/st0ked622/nightshift/releases/download/v1.1.0/nightshift-v1.1.0.zip),
+   or grab the newest build from the
    [**Releases**](https://github.com/st0ked622/nightshift/releases/latest) page.
 2. Unzip it.
 3. Open `chrome://extensions` in Chrome.
