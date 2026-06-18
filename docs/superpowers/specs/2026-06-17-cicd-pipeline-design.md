@@ -31,9 +31,22 @@ Why this pattern over direct-push-from-CI:
 
 - **Nothing pushes directly to `main`** — not even the bot. The version bump
   itself goes through a PR like everything else, so it is fully compatible with
-  "restrict direct pushes to main" and needs **no Personal Access Token** or
-  branch-protection bypass carve-out.
+  "restrict direct pushes to main" and needs no branch-protection bypass
+  carve-out.
 - The pending release is transparent (a visible PR with a changelog preview).
+
+> **Correction (2026-06-18):** The first end-to-end test showed the original
+> "no token at all, default `GITHUB_TOKEN`" plan could not satisfy a **required**
+> status check on the release PR. GitHub suppresses workflow runs for pushes made
+> by `GITHUB_TOKEN` (recursion prevention), so the `release-please--**` push
+> trigger never fired; and the `pull_request` run on an Actions-authored PR is
+> held as `action_required` and cannot be auto-approved. The fix is a **GitHub
+> App token** (not a PAT): release-please runs with a per-run token minted from a
+> small repo-scoped GitHub App via `actions/create-github-app-token`. An
+> App-minted token is a distinct identity, so the branch/PR it creates **do**
+> trigger workflows and the `validate` check populates normally. Nothing expires
+> or needs rotation (the token is minted per run). See the updated component
+> descriptions below.
 
 ### Version source of truth
 
@@ -51,13 +64,14 @@ A single job named `validate`.
 
 **Triggers:**
 - `pull_request` targeting `main`.
-- `push` to `release-please--**` branches.
 
-The second trigger is the standard workaround for the fact that PRs created by
-the default `GITHUB_TOKEN` (i.e. release-please's release PR) do **not** trigger
-`pull_request` workflows. Running `validate` as a `push` check on the
-release-please branch produces a check run of the same name on the head commit,
-which satisfies the required status check on the release PR — without a PAT.
+Because release-please runs under a **GitHub App token** (see component 2), its
+release PR is authored by a distinct App identity rather than `GITHUB_TOKEN`, so
+the normal `pull_request` trigger fires on it and the `validate` check populates
+like any other PR. (The original design used an extra `push` trigger on
+`release-please--**` as a workaround for `GITHUB_TOKEN`-authored PRs not
+triggering workflows; with the App token that workaround is unnecessary and was
+removed to avoid double-running `validate`.)
 
 **Steps:**
 1. Checkout.
@@ -70,11 +84,16 @@ which satisfies the required status check on the release PR — without a PAT.
 ### 2. Release — `.github/workflows/release-please.yml`
 
 **Trigger:** `push` to `main`.
-**Permissions:** `contents: write`, `pull-requests: write`.
-**Token:** default `GITHUB_TOKEN` (no PAT).
+**Permissions (`GITHUB_TOKEN`):** `contents: write` (checkout + asset upload).
+**Token (release-please + asset upload):** a GitHub App installation token minted
+per run by `actions/create-github-app-token` from `secrets.RP_APP_ID` and
+`secrets.RP_APP_KEY`. The App is repo-scoped with **Contents: Read and write** and
+**Pull requests: Read and write**. Not a PAT — no expiry, no rotation.
 
 **Job `release-please`:**
-1. `googleapis/release-please-action@v4` (reads `release-please-config.json` and
+0. `actions/create-github-app-token@v1` mints the App token used by the steps below.
+1. `googleapis/release-please-action@v4` (with `token:` set to the App token, reads
+   `release-please-config.json` and
    `.release-please-manifest.json`). On normal commit pushes it creates/updates
    the release PR. On the push that lands a merged release PR, it creates the
    GitHub Release and tag, and emits outputs (`release_created`, `tag_name`).
@@ -134,10 +153,17 @@ release-please auto-creates and maintains `CHANGELOG.md`.
 
 ## One-time manual steps (documented, not automated)
 
-1. Run `scripts/setup-branch-protection.sh`.
-2. In repo **Settings → Actions → General**, enable **"Allow GitHub Actions to
-   create and approve pull requests"** (required for release-please to open its
-   release PR).
+1. **Create the release-bot GitHub App** (owner: your account):
+   - Permissions: **Contents: Read and write**, **Pull requests: Read and write**.
+   - No webhook needed. Generate a **private key** (`.pem`).
+   - **Install** the App on the `nightshift` repo.
+   - Add two repo secrets: `RP_APP_ID` (the App's numeric ID) and `RP_APP_KEY`
+     (the full `.pem` contents).
+2. Run `scripts/setup-branch-protection.sh`.
+3. (Optional / no longer required) "Allow GitHub Actions to create and approve
+   pull requests" in **Settings → Actions → General**. With the App token,
+   release-please no longer relies on `GITHUB_TOKEN` to open its PR, so this
+   setting is not needed — harmless if left enabled.
 
 ## Data flow
 

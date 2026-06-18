@@ -6,16 +6,28 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      # Mint a short-lived token from the release-bot GitHub App. Unlike the
+      # default GITHUB_TOKEN, an App-minted token is a distinct identity, so the
+      # branches/PRs it creates DO trigger workflows (the required `validate`
+      # check populates on the release PR). The token is minted per run and
+      # never stored, so there is nothing to rotate or expire.
+      - name: Generate release-bot token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.RP_APP_ID }}
+          private-key: ${{ secrets.RP_APP_KEY }}
+
       - name: Run release-please
         id: release
         uses: googleapis/release-please-action@v4
         with:
+          token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
@@ -39,7 +51,7 @@ jobs:
       - name: Upload zip to Release
         if: ${{ steps.release.outputs.release_created }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           TAG_NAME: ${{ steps.release.outputs.tag_name }}
         run: |
           gh release upload "${TAG_NAME}" "nightshift-${TAG_NAME}.zip" --clobber
