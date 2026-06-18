@@ -1,6 +1,6 @@
 {
   "name": "nightshift",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Turn any website dark. Per-site control and adjustable brightness.",
   "private": true,
   "type": "module",
