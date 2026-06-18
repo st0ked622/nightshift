@@ -1,3 +1,6 @@
 .DS_Store
 node_modules/
 nightshift-v*.zip
+
+# Local-only planning/spec docs — never pushed to the remote
+docs/superpowers/
