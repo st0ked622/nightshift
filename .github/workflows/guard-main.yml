@@ -1,0 +1,46 @@
+name: Guard main
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  guard:
+    name: guard-direct-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify push came from a merged PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          # Look up PRs associated with the head commit.
+          count=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${REPO}/commits/${SHA}/pulls" \
+            --jq 'length')
+
+          if [ "${count}" -gt 0 ]; then
+            echo "Commit ${SHA} is associated with ${count} PR(s). OK."
+            exit 0
+          fi
+
+          echo "::error::Direct push to main detected — commit ${SHA} is not associated with any PR."
+
+          gh issue create \
+            --repo "${REPO}" \
+            --title "Suspicious direct push to main: ${SHA}" \
+            --body "$(printf 'A push to \`main\` was not associated with any pull request.\n\n- Commit: \`%s\`\n- Pushed by: @%s\n- Run: %s\n\nIf this was an intentional emergency hotfix, close this issue. Otherwise, review branch protection on \`main\`.' "${SHA}" "${ACTOR}" "${RUN_URL}")" \
+            || echo "Could not open issue (continuing to fail the run)."
+
+          exit 1

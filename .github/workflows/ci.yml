@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - "release-please--**"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npx eslint .
+
+      - name: Validate manifest.json
+        run: |
+          node --eval '
+            const fs = require("fs");
+            const m = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
+            if (m.manifest_version !== 3) {
+              throw new Error("manifest_version must be 3, got " + m.manifest_version);
+            }
+            if (typeof m.version !== "string" || m.version.length === 0) {
+              throw new Error("manifest.json is missing a version string");
+            }
+            console.log("manifest.json OK (version " + m.version + ")");
+          '
+
+      - name: Syntax check JS
+        run: |
+          node --check content.js
+          node --check popup.js
